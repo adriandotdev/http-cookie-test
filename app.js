@@ -13,7 +13,7 @@ app.use(cookieParser())
 
 app.post('/api/v1/login', async (req, res) => {
 
-    res.cookie('refresh', 'sample-refresh', { secure: true, sameSite: 'lax', httpOnly: true, path: '/' });
+    res.cookie('refresh', 'sample-refresh', { secure: true, sameSite: 'strict', httpOnly: true, path: '/' });
 
     return res.status(200).json({ status: 200, data: [], message: 'Success' })
 });

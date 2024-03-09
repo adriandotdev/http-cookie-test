@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], credentials: true, exposedHeaders: ['Set-Cookie'] }));
+app.use(cors({ origin: ['http://localhost:5173', 'https://react-refresh-project.onrender.com'], methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], credentials: true, exposedHeaders: ['Set-Cookie'] }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

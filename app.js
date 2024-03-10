@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -11,18 +12,51 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 
 
-app.post('/api/v1/login', async (req, res) => {
+const users = [{
 
-    res.cookie('refresh', 'sample-refresh', { secure: true, sameSite: 'none', httpOnly: true, path: '/' });
+    username: 'user1',
+    password: 'password',
+    role: 'admin'
+}, { username: 'user2', password: 'password', role: 'cashier' }];
 
-    return res.status(200).json({ status: 200, data: [], message: 'Success' })
-});
+app.post('/api/v1/login', (req, res) => {
 
-app.get('/api/sample/test', async (req, res) => {
+    const { username, password } = req.body;
 
-    const cookie = req.cookies.refresh;
+    const user = users.some(user => user.username === username && user.password === password);
 
-    return res.json({ cookie, cookie_headers: req.headers.cookie })
+    if (!user) return res.status(401);
+
+    const accessToken = jwt.sign({ username, role: user.role }, 'access-key');
+    const refreshToken = jwt.sign({ username, role: user.role }, 'refresh-key');
+
+    res.cookie('access-token', accessToken, { secure: true, sameSite: 'none', httpOnly: true, path: '/' });
+    res.cookie('refresh-token', refreshToken, { secure: true, sameSite: 'none', httpOnly: true, path: '/' });
+
+    return res.status(200).json({ status: 200 });
 })
 
+app.get('/api/v1/verify', (req, res) => {
+
+    const accessToken = req.cookies['access-token'];
+
+    if (!accessToken) return res.status(401).json({ status: 401 })
+
+    try {
+        jwt.verify(accessToken, 'access-key');
+    }
+    catch (err) {
+        if (err instanceof jwt.JsonWebTokenError || err instanceof jwt.TokenExpiredError) return res.status(401).json({ status: 401 })
+
+        return res.status(500).json({ status: 500 })
+    }
+
+    return res.status(200).json({ status: 200 })
+})
+app.get('/api/v1/logout', (req, res) => {
+
+    res.clearCookie('access-token');
+    res.clearCookie('refresh-token');
+    res.status(200).json({ status: 200, message: 'Logged out successfully' })
+})
 module.exports = app;
